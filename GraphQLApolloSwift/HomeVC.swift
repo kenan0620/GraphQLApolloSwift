@@ -8,12 +8,27 @@
 
 import Foundation
 
-import UIKit
-class HomeVC: UIViewController{
+import Alamofire
+
+import Apollo
+
+class HomeVC: UIViewController {
     
     override func viewDidLoad() {
         self.view.backgroundColor = UIColor.white
         
         print("Hello welcome to Xcode11")
+    
+        let graphQLEndPoint = "www.saf.com/graphql"
+        let apollo = ApolloClient(url: URL(string: graphQLEndPoint)!)
+        let queryString = "query"
+ 
+        
     }
+    
+        
+        
+
+         
 }
+
