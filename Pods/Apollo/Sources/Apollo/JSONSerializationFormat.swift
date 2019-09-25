@@ -2,7 +2,7 @@ import Foundation
 
 public final class JSONSerializationFormat {
   public class func serialize(value: JSONEncodable) throws -> Data {
-    return try JSONSerialization.dataSortedIfPossible(withJSONObject: value.jsonValue)
+    return try JSONSerialization.data(withJSONObject: value.jsonValue, options: [])
   }
   
   public class func deserialize(data: Data) throws -> JSONValue {

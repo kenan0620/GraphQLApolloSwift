@@ -1,16 +1,16 @@
-import Dispatch
 import Foundation
+import Dispatch
 
 /// A resolver is responsible for resolving a value for a field.
-typealias GraphQLResolver = (_ object: JSONObject, _ info: GraphQLResolveInfo) -> ResultOrPromise<JSONValue?>
+public typealias GraphQLResolver = (_ object: JSONObject, _ info: GraphQLResolveInfo) -> ResultOrPromise<JSONValue?>
 
-struct GraphQLResolveInfo {
+public struct GraphQLResolveInfo {
   let variables: GraphQLMap?
   
-  var responsePath: ResponsePath = []
+  var responsePath: [String] = []
   var responseKeyForField: String = ""
   
-  var cachePath: ResponsePath = []
+  var cachePath: [String] = []
   var cacheKeyForField: String = ""
   
   var fields: [GraphQLField] = []
@@ -24,22 +24,22 @@ struct GraphQLResolveInfo {
   }
 }
 
-/// An error which has occurred in processing a GraphQLResult
+func joined(path: [String]) -> String {
+  return path.joined(separator: ".")
+}
+
 public struct GraphQLResultError: Error, LocalizedError {
-  let path: ResponsePath
+  let path: [String]
+  let underlying: Error
   
-  /// The error that occurred during parsing.
-  public let underlying: Error
-  
-  /// A description of the error which includes the path where the error occurred.
   public var errorDescription: String? {
-    return "Error at path \"\(path))\": \(underlying)"
+    return "Error at path \"\(joined(path: path))\": \(underlying)"
   }
 }
 
 /// A GraphQL executor is responsible for executing a selection set and generating a result. It is initialized with a resolver closure that gets called repeatedly to resolve field values.
 ///
-/// An executor is used both to parse a response received from the server, and to read from the normalized cache. It can also be configured with a accumulator that receives events during execution, and these execution events are used by `GraphQLResultNormalizer` to normalize a response into a flat set of records and by `GraphQLDependencyTracker` keep track of dependent keys.
+/// An executor is used both to parse a response received from the server, and to read from the normalized cache. It can also be configured with a accumulator that receives events during execution, and these execution events are used by `GraphQLResultNormalizer` to normalize a response into a flat set of records and keep track of dependent keys.
 ///
 /// The methods in this class closely follow the [execution algorithm described in the GraphQL specification](https://facebook.github.io/graphql/#sec-Execution), but an important difference is that execution returns a value for every selection in a selection set, not the merged fields. This means we get a separate result for every fragment, even though all fields that share a response key are still executed at the same time for efficiency.
 ///
@@ -87,7 +87,7 @@ public struct GraphQLResultError: Error, LocalizedError {
 ///
 /// These values then get passed into a generated `GraphQLMappable` initializer, and this is how type safe results get built up.
 ///
-final class GraphQLExecutor {
+public final class GraphQLExecutor {
   private let queue: DispatchQueue
   
   private let resolver: GraphQLResolver
@@ -98,7 +98,7 @@ final class GraphQLExecutor {
   var shouldComputeCachePath = true
   
   /// Creates a GraphQLExecutor that resolves field values by calling the provided resolver.
-  init(resolver: @escaping GraphQLResolver) {
+  public init(resolver: @escaping GraphQLResolver) {
     queue = DispatchQueue(label: "com.apollographql.GraphQLExecutor")
     
     self.resolver = resolver
@@ -193,11 +193,11 @@ final class GraphQLExecutor {
     let firstField = fields[0]
     
     var info = info
-
+    
     let responseKey = firstField.responseKey
     info.responseKeyForField = responseKey
     info.responsePath.append(responseKey)
-
+    
     if shouldComputeCachePath {
       let cacheKey = try firstField.cacheKey(with: info.variables)
       info.cacheKeyForField = cacheKey
@@ -246,7 +246,7 @@ final class GraphQLExecutor {
       
       return try whenAll(array.enumerated().map { index, element -> ResultOrPromise<Accumulator.PartialResult> in
         var info = info
-
+        
         let indexSegment = String(index)
         info.responsePath.append(indexSegment)
         info.cachePath.append(indexSegment)

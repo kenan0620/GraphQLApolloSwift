@@ -1,0 +1,9 @@
+query user_getInfo($uid: ID){
+  user_getInfo(uid: $uid){
+    uid
+    username
+    registerTime
+  }
+}
+
+

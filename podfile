@@ -4,8 +4,7 @@ use_frameworks!
 
 target 'GraphQLApolloSwift' do
 
-  pod 'Alamofire'
   
-  pod 'Apollo'
+pod 'Apollo', '~> 0.10.1'
 
 end

@@ -2,19 +2,19 @@ final class GraphQLDependencyTracker: GraphQLResultAccumulator {
   private var dependentKeys: Set<CacheKey> = Set()
   
   func accept(scalar: JSONValue, info: GraphQLResolveInfo) {
-    dependentKeys.insert(info.cachePath.joined)
+    dependentKeys.insert(joined(path: info.cachePath))
   }
   
   func acceptNullValue(info: GraphQLResolveInfo) {
-    dependentKeys.insert(info.cachePath.joined)
+    dependentKeys.insert(joined(path: info.cachePath))
   }
   
   func accept(list: [Void], info: GraphQLResolveInfo) {
-    dependentKeys.insert(info.cachePath.joined)
+    dependentKeys.insert(joined(path: info.cachePath))
   }
   
   func accept(fieldEntry: Void, info: GraphQLResolveInfo) {
-    dependentKeys.insert(info.cachePath.joined)
+    dependentKeys.insert(joined(path: info.cachePath))
   }
   
   func accept(fieldEntries: [Void], info: GraphQLResolveInfo) {

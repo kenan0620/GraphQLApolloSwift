@@ -2,14 +2,10 @@ import Foundation
 
 extension String: JSONDecodable, JSONEncodable {
   public init(jsonValue value: JSONValue) throws {
-    switch value {
-    case let string as String:
-        self = string
-    case let int as Int:
-        self = String(int)
-    default:
-        throw JSONDecodingError.couldNotConvert(value: value, to: String.self)
+    guard let string = value as? String else {
+      throw JSONDecodingError.couldNotConvert(value: value, to: String.self)
     }
+    self = string
   }
 
   public var jsonValue: JSONValue {

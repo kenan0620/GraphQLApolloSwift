@@ -2,9 +2,10 @@ import Dispatch
 
 /// A `GraphQLQueryWatcher` is responsible for watching the store, and calling the result handler with a new result whenever any of the data the previous result depends on changes.
 public final class GraphQLQueryWatcher<Query: GraphQLQuery>: Cancellable, ApolloStoreSubscriber {
-  weak var client: ApolloClientProtocol?
+  weak var client: ApolloClient?
   let query: Query
-  let resultHandler: GraphQLResultHandler<Query.Data>
+  let handlerQueue: DispatchQueue
+  let resultHandler: OperationResultHandler<Query>
   
   private var context = 0
   
@@ -12,17 +13,10 @@ public final class GraphQLQueryWatcher<Query: GraphQLQuery>: Cancellable, Apollo
   
   private var dependentKeys: Set<CacheKey>?
   
-  /// Designated initializer
-  ///
-  /// - Parameters:
-  ///   - client: The client protocol to pass in
-  ///   - query: The query to watch
-  ///   - resultHandler: The result handler to call with changes.
-  public init(client: ApolloClientProtocol,
-              query: Query,
-              resultHandler: @escaping GraphQLResultHandler<Query.Data>) {
+  init(client: ApolloClient, query: Query, handlerQueue: DispatchQueue, resultHandler: @escaping OperationResultHandler<Query>) {
     self.client = client
     self.query = query
+    self.handlerQueue = handlerQueue
     self.resultHandler = resultHandler
     
     client.store.subscribe(self)
@@ -34,17 +28,11 @@ public final class GraphQLQueryWatcher<Query: GraphQLQuery>: Cancellable, Apollo
   }
   
   func fetch(cachePolicy: CachePolicy) {
-    fetching = client?.fetch(query: query, cachePolicy: cachePolicy, context: &context, queue: .main) { [weak self] result in
+    fetching = client?._fetch(query: query, cachePolicy: cachePolicy, context: &context, queue: handlerQueue) { [weak self] (result, error) in
       guard let `self` = self else { return }
-      
-      switch result {
-      case .success(let graphQLResult):
-        self.dependentKeys = graphQLResult.dependentKeys
-      case .failure:
-        break
-      }
-      
-      self.resultHandler(result)
+        
+      self.dependentKeys = result?.dependentKeys
+      self.resultHandler(result, error)
     }
   }
   
